@@ -65,6 +65,14 @@ func (u *Universe) mkNetwork(cfg *config.Network) error {
 		}
 	}
 
+	// When vde_switch runs in interactive mode (i.e., no "--daemon"
+	// flag) it shuts down if stdin returns EOF so we need to open a
+	// StdinPipe to keep it running
+	_, err := ret.cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
 	if err := ret.cmd.Start(); err != nil {
 		return err
 	}
