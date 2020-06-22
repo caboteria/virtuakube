@@ -240,26 +240,31 @@ func (c *Cluster) startController() error {
 	}
 
 	controllerConfig := fmt.Sprintf(`
-apiVersion: kubeadm.k8s.io/v1beta1
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: InitConfiguration
 bootstrapTokens:
-- token: "000000.0000000000000000"
-  ttl: "24h"
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: "000000.0000000000000000"
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
 localAPIEndpoint:
   advertiseAddress: %s
 nodeRegistration:
   kubeletExtraArgs:
     node-ip: %s
 ---
-apiVersion: kubeadm.k8s.io/v1beta1
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 networking:
-  podSubnet: "10.32.0.0/12"
-kubernetesVersion: "1.14.0"
-clusterName: "virtuakube"
+  podSubnet: 10.32.0.0/12
+kubernetesVersion: v1.18.4
+clusterName: virtuakube
 apiServer:
   certSANs:
-  - "127.0.0.1"
+  - 127.0.0.1
 `, c.controller.IPv4(c.controller.Networks()[0]), c.controller.IPv4(c.controller.Networks()[0]))
 	if err := c.controller.WriteFile("/tmp/k8s.conf", []byte(controllerConfig)); err != nil {
 		return err
@@ -288,7 +293,7 @@ func (c *Cluster) startNode(node *VM) error {
 		Port: 6443,
 	}
 	nodeConfig := fmt.Sprintf(`
-apiVersion: kubeadm.k8s.io/v1beta1
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
